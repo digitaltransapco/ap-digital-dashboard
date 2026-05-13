@@ -1,0 +1,32 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@theme {
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-mono), ui-monospace, monospace;
+}
+
+@layer base {
+  :root {
+    --bg: #fafafa;
+    --surface: #ffffff;
+    --border: #e5e7eb;
+    --fg: #0a0a0a;
+    --fg-muted: #525252;
+    --accent: #4f46e5;
+    --accent-soft: #eef2ff;
+    --positive: #059669;
+    --warning: #d97706;
+    --danger: #e11d48;
+    --indiapost: #c8102e;
+  }
+
+  body {
+    background-color: var(--bg);
+  }
+}
+
+@utility text-balance {
+  text-wrap: balance;
+}

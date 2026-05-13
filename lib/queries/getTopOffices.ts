@@ -98,9 +98,13 @@ export async function getTopOfficesForDivision(
     return offices.sort((a, b) => b.manual_cnt - a.manual_cnt || b.total_cnt - a.total_cnt).slice(0, 5);
   }
   if (view === 'champions') {
-    const avgVol = offices.reduce((s, o) => s + o.total_cnt, 0) / (offices.length || 1);
+    // Minimum volume = median of peer group, with hard floor of 50.
+    // Prevents tiny offices with accidental 100% digital from dominating.
+    const sorted = [...offices].map((o) => o.total_cnt).sort((a, b) => a - b);
+    const median = sorted.length > 0 ? sorted[Math.floor(sorted.length / 2)] : 0;
+    const threshold = Math.max(50, median);
     return offices
-      .filter((o) => o.total_cnt >= avgVol)
+      .filter((o) => o.total_cnt >= threshold)
       .sort((a, b) => (b.digital_pct_cnt ?? 0) - (a.digital_pct_cnt ?? 0) || b.total_cnt - a.total_cnt)
       .slice(0, 5);
   }

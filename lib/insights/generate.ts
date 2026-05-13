@@ -31,8 +31,11 @@ export function generateInsights(
 ): BiCallout[] {
   const callouts: BiCallout[] = [];
 
+  // Exclude orphan offices (not in offices_master — division_name is empty)
+  const knownOffices = offices.filter((o) => o.division_name !== '');
+
   // 1. Digital Headroom
-  const laggards = offices
+  const laggards = knownOffices
     .filter((o) => (o.digital_pct_cnt ?? 0) < circleStats.digital_pct_cnt && o.total_cnt > 20)
     .sort((a, b) => b.total_cnt - a.total_cnt)
     .slice(0, 20);
@@ -54,11 +57,11 @@ export function generateInsights(
   });
 
   // 2. Quick Wins — offices within 5pp of 50% or 70%
-  const quickWins50 = offices.filter((o) => {
+  const quickWins50 = knownOffices.filter((o) => {
     const p = o.digital_pct_cnt ?? 0;
     return p >= 45 && p < 50;
   });
-  const quickWins70 = offices.filter((o) => {
+  const quickWins70 = knownOffices.filter((o) => {
     const p = o.digital_pct_cnt ?? 0;
     return p >= 65 && p < 70;
   });
@@ -78,7 +81,7 @@ export function generateInsights(
   });
 
   // 3. Cash-Only Watchlist — >50 txns, 0 digital
-  const cashOnly = offices
+  const cashOnly = knownOffices
     .filter((o) => o.total_cnt > 50 && (o.digital_pct_cnt ?? 0) === 0)
     .sort((a, b) => b.total_cnt - a.total_cnt);
   const cashOnlyCount = cashOnly.length;

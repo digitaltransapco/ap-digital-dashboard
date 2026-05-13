@@ -23,10 +23,11 @@ export function DivisionCard({ stats, tabData }: Props) {
           <h3 className="text-sm font-bold text-[var(--fg)] leading-tight">{shortName}</h3>
           <p className="text-xs text-[var(--fg-muted)] mt-0.5">Division</p>
         </div>
-        <div className="flex items-center gap-1.5 shrink-0">
+        <div className="flex items-center gap-3 shrink-0">
           <Badge variant="secondary" className="font-mono text-xs bg-gray-100">
             {formatCount(stats.total_cnt)}
           </Badge>
+          <div className="w-px h-4 bg-[var(--border)]" aria-hidden="true" />
           <Badge className={`${color.bg} ${color.text} border-0 font-mono text-xs`}>
             {formatPct(stats.digital_pct_cnt)}
           </Badge>

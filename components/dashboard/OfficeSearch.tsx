@@ -96,6 +96,7 @@ export function OfficeSearch() {
           aria-autocomplete="list"
           role="combobox"
           aria-expanded={open}
+          aria-controls="office-search-listbox"
         />
         {query && (
           <button
@@ -117,7 +118,7 @@ export function OfficeSearch() {
             <p className="text-xs text-[var(--fg-muted)] px-3 py-2">No offices found.</p>
           )}
           {!loading && results.length > 0 && (
-            <ul ref={listRef} role="listbox">
+            <ul ref={listRef} id="office-search-listbox" role="listbox">
               {results.map((r, i) => {
                 const color = digitalPctColor(r.digital_pct_cnt);
                 return (

@@ -15,10 +15,17 @@ interface Props {
 export function OfficeTypeTabs({ tabData }: Props) {
   const [view, setView] = useState<RankingView>('push');
 
+  // Default to the office type with the highest combined volume (sum of top-5 volume entries)
+  const bestTab = TAB_ORDER.reduce<TabLabel>((best, tab) => {
+    const sum = (tabData[tab]?.volume ?? []).reduce((s, o) => s + o.total_cnt, 0);
+    const bestSum = (tabData[best]?.volume ?? []).reduce((s, o) => s + o.total_cnt, 0);
+    return sum > bestSum ? tab : best;
+  }, TAB_ORDER[0]);
+
   return (
     <div className="space-y-2">
       <RankingToggle value={view} onChange={setView} />
-      <Tabs defaultValue="HO">
+      <Tabs defaultValue={bestTab}>
         <TabsList className="h-7 gap-0.5">
           {TAB_ORDER.map((tab) => (
             <TabsTrigger key={tab} value={tab} className="text-xs h-6 px-2">{tab}</TabsTrigger>

@@ -19,9 +19,12 @@ export function BICalloutStrip({ callouts }: Props) {
         const { bg, icon: Icon, iconColor, titleColor } = VARIANT_STYLES[c.variant];
         return (
           <div key={c.id} className={`rounded-xl border p-4 flex flex-col gap-2 ${bg}`}>
-            <div className="flex items-center gap-2">
-              <Icon className={`w-4 h-4 shrink-0 ${iconColor}`} />
-              <h3 className={`text-sm font-semibold ${titleColor}`}>{c.title}</h3>
+            <div className="flex items-start gap-2">
+              <Icon className={`w-4 h-4 shrink-0 mt-0.5 ${iconColor}`} />
+              <div>
+                <h3 className={`text-sm font-semibold leading-tight ${titleColor}`}>{c.title}</h3>
+                {c.subtitle && <p className={`text-xs font-normal mt-0.5 ${titleColor} opacity-70`}>{c.subtitle}</p>}
+              </div>
             </div>
             <p className="text-xs text-gray-700 leading-relaxed flex-1">{c.body}</p>
             <p className="text-xs font-medium text-gray-600 border-t border-black/10 pt-2 mt-1">{c.cta}</p>

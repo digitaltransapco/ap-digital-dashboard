@@ -62,8 +62,10 @@ async function getOfficeInsightData(snapshotId: string): Promise<OfficeInsightDa
 
   return allTxns.map((row) => {
     const master = masterMap.get(row.office_id);
-    const topDigitalMode = row.modes
-      ? Object.entries(row.modes).filter(([, v]) => v.cnt > 0).sort((a, b) => b[1].cnt - a[1].cnt)[0]?.[0]
+    const modeEntries = row.modes ? Object.entries(row.modes).filter(([, v]) => v.cnt > 0) : [];
+    const topDigitalMode = modeEntries.sort((a, b) => b[1].cnt - a[1].cnt)[0]?.[0];
+    const mode_cnts = modeEntries.length > 0
+      ? Object.fromEntries(modeEntries.map(([k, v]) => [k, v.cnt]))
       : undefined;
     return {
       office_id: row.office_id,
@@ -73,6 +75,7 @@ async function getOfficeInsightData(snapshotId: string): Promise<OfficeInsightDa
       digital_pct_cnt: row.digital_pct_cnt ?? null,
       manual_cnt: row.manual_cnt ?? 0,
       top_digital_mode: topDigitalMode,
+      mode_cnts,
     };
   });
 }

@@ -8,6 +8,7 @@ import { CircleKpiRow, CircleKpiRowSkeleton } from '@/components/dashboard/Circl
 import { CircleLeaderboard } from '@/components/dashboard/CircleLeaderboard';
 import { BICalloutStrip } from '@/components/dashboard/BICalloutStrip';
 import { DivisionGrid } from '@/components/dashboard/DivisionGrid';
+import { OfficeSearch } from '@/components/dashboard/OfficeSearch';
 import { Skeleton } from '@/components/ui/skeleton';
 import { generateInsights } from '@/lib/insights/generate';
 import type { OfficeInsightData, DivisionInsightData } from '@/lib/insights/generate';
@@ -152,9 +153,12 @@ export default async function DashboardPage() {
         <BICalloutStrip callouts={callouts} />
 
         <div>
-          <div className="flex items-baseline justify-between mb-4">
-            <h2 className="text-lg font-bold text-[var(--fg)]">Division Breakdown</h2>
-            <span className="text-xs text-[var(--fg-muted)]">{divisionStats.length} divisions · top 5 offices per view</span>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+            <div>
+              <h2 className="text-lg font-bold text-[var(--fg)]">Division Breakdown</h2>
+              <span className="text-xs text-[var(--fg-muted)]">{divisionStats.length} divisions · top 5 offices per view</span>
+            </div>
+            <OfficeSearch />
           </div>
           <Suspense fallback={
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">

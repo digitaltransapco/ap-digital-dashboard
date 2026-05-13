@@ -33,11 +33,16 @@ export async function DivisionGrid({ divisionStats, snapshotId }: Props) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
       {divisionStats.map((div) => (
-        <DivisionCard
+        <div
           key={div.division_name}
-          stats={div}
-          tabData={tabDataMap.get(div.division_name)!}
-        />
+          id={`division-${div.division_name.toLowerCase().replace(/\s+/g, '-')}`}
+          className="rounded-xl transition-shadow duration-500 scroll-mt-6"
+        >
+          <DivisionCard
+            stats={div}
+            tabData={tabDataMap.get(div.division_name)!}
+          />
+        </div>
       ))}
     </div>
   );

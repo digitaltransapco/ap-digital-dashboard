@@ -30,3 +30,72 @@
 @utility text-balance {
   text-wrap: balance;
 }
+
+/* ─── Print styles ──────────────────────────────────────────────────────── */
+@media print {
+  @page {
+    margin: 1.5cm;
+    size: A4 portrait;
+  }
+
+  /* Print-only header and footer */
+  body::before {
+    content: "AP Circle Digital Transactions Dashboard";
+    display: block;
+    font-size: 9pt;
+    font-weight: bold;
+    border-bottom: 1pt solid #333;
+    padding-bottom: 4pt;
+    margin-bottom: 8pt;
+  }
+  body::after {
+    content: "Compiled by O/o the CPMG, Andhra Pradesh Circle, Vijayawada";
+    display: block;
+    font-size: 8pt;
+    color: #555;
+    border-top: 1pt solid #ccc;
+    padding-top: 4pt;
+    margin-top: 8pt;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    text-align: center;
+  }
+
+  /* Hide interactive and non-print elements */
+  .print\:hidden,
+  [data-print-hide],
+  nav,
+  button:not([data-print-show]) { display: none !important; }
+
+  /* Force light theme, remove shadows */
+  * {
+    background: white !important;
+    color: black !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  /* Keep border for card outlines */
+  [class*="border"] { border-color: #ccc !important; }
+
+  /* Division grid: 2 columns on print */
+  .grid-cols-1.md\:grid-cols-2.lg\:grid-cols-3.xl\:grid-cols-4 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* Avoid page breaks inside division cards */
+  [id^="division-"] {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Hide tab navigation — show only active tab content */
+  [role="tablist"] { display: none !important; }
+  [role="tabpanel"]:not([data-state="active"]) { display: none !important; }
+
+  /* Remove hover effects */
+  a { text-decoration: none !important; }
+  a[href]::after { content: none !important; }
+}

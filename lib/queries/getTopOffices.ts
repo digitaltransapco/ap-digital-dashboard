@@ -104,7 +104,7 @@ export async function getTopOfficesForDivision(
     const median = sorted.length > 0 ? sorted[Math.floor(sorted.length / 2)] : 0;
     const threshold = Math.max(50, median);
     return offices
-      .filter((o) => o.total_cnt >= threshold)
+      .filter((o) => o.total_cnt >= threshold && (o.digital_pct_cnt ?? 0) >= 25)
       .sort((a, b) => (b.digital_pct_cnt ?? 0) - (a.digital_pct_cnt ?? 0) || b.total_cnt - a.total_cnt)
       .slice(0, 5);
   }

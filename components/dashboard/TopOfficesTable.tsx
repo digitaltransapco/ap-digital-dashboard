@@ -10,7 +10,10 @@ interface Props {
 
 export function TopOfficesTable({ offices, view }: Props) {
   if (offices.length === 0) {
-    return <p className="text-xs text-[var(--fg-muted)] py-3 text-center">No offices found for this selection.</p>;
+    const msg = view === 'champions'
+      ? 'No champions in this category yet.'
+      : 'No offices found for this selection.';
+    return <p className="text-xs text-[var(--fg-muted)] py-3 text-center">{msg}</p>;
   }
 
   return (

@@ -120,6 +120,12 @@ export default async function DashboardPage() {
   }
 
   const delta = await getDelta(snapshot, circleStats);
+
+  const territorialTotal = divisionStats.reduce((s, d) => s + d.total_cnt, 0);
+  const nonTerritorialTxns = circleStats.total_cnt - territorialTotal;
+  const territorialOffices = divisionStats.reduce((s, d) => s + d.office_count, 0);
+  const nonTerritorialOffices = circleStats.office_count - territorialOffices;
+
   const officeData = await getOfficeInsightData(snapshot.id);
   const divisionInsightData: DivisionInsightData[] = divisionStats.map((d) => ({
     division_name: d.division_name,
@@ -146,6 +152,15 @@ export default async function DashboardPage() {
         <Suspense fallback={<CircleKpiRowSkeleton />}>
           <CircleKpiRow stats={circleStats} delta={delta} />
         </Suspense>
+
+        {nonTerritorialTxns > 0 && (
+          <p className="text-xs text-[var(--fg-muted)] bg-[var(--card)] border border-[var(--border)] rounded-lg px-4 py-2.5">
+            Circle total includes <strong>{nonTerritorialTxns.toLocaleString('en-IN')}</strong> transactions
+            from <strong>{nonTerritorialOffices}</strong> offices (RMS divisions, Speedpost Centres, Foreign Post Offices and other
+            admin units) that are not part of the 29 territorial division blocks below.
+            Per-division percentages are computed only over the territorial offices.
+          </p>
+        )}
 
         <Suspense fallback={<Skeleton className="h-64 w-full rounded-xl" />}>
           <CircleLeaderboard snapshotId={snapshot.id} />

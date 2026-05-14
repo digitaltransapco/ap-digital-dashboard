@@ -81,10 +81,11 @@ export async function getActionPlan(
     }
   }
 
-  // 3. Build filtered universe and circle-level totals
+  // 3. Circle baseline uses the full snapshot (same universe as the headline KPI).
+  //    Candidates are still filtered to the addressable territorial offices.
+  const circle_total   = allTxns.reduce((s, t) => s + t.total_cnt, 0);
+  const circle_digital = allTxns.reduce((s, t) => s + t.digital_cnt, 0);
   const universe = allTxns.filter((t) => masterMap.has(t.office_id));
-  const circle_total = universe.reduce((s, t) => s + t.total_cnt, 0);
-  const circle_digital = universe.reduce((s, t) => s + t.digital_cnt, 0);
   const current_circle_pct = circle_total > 0 ? (circle_digital / circle_total) * 100 : 0;
   const target_circle_pct = current_circle_pct + deltaPp;
   const required_additional_digital = (deltaPp / 100) * circle_total;

@@ -1,4 +1,5 @@
 import { createServiceClient } from '@/lib/supabase/server';
+import { getCircleStats } from '@/lib/queries/getCircleStats';
 import type { UploadSnapshot } from '@/lib/supabase/types';
 import type { CircleStats } from '@/lib/queries/getCircleStats';
 
@@ -26,25 +27,31 @@ export async function getDelta(
 
   const prevSnap = prev ? (prev as UploadSnapshot) : null;
 
-  if (!prevSnap || !prevSnap.total_cnt) {
+  if (!prevSnap) {
+    return { delta_total_cnt: null, delta_total_cnt_pct: null, delta_digital_cnt: null, delta_digital_pct_cnt_pp: null, prev_snapshot: null };
+  }
+
+  // Compute previous snapshot stats live — same universe as getCircleStats —
+  // so the comparison is not distorted by stale upload_snapshots cached columns.
+  const prevLive = await getCircleStats(prevSnap.id);
+
+  if (!prevLive || prevLive.total_cnt === 0) {
     return { delta_total_cnt: null, delta_total_cnt_pct: null, delta_digital_cnt: null, delta_digital_pct_cnt_pp: null, prev_snapshot: prevSnap };
   }
 
-  // Use live stats for current to avoid stale upload_snapshots cache
-  const currTotal = liveStats.total_cnt;
+  const currTotal   = liveStats.total_cnt;
   const currDigital = liveStats.digital_cnt;
 
-  const delta_total_cnt = currTotal - prevSnap.total_cnt;
-  const delta_total_cnt_pct = (delta_total_cnt / prevSnap.total_cnt) * 100;
+  const delta_total_cnt     = currTotal - prevLive.total_cnt;
+  const delta_total_cnt_pct = (delta_total_cnt / prevLive.total_cnt) * 100;
 
   const currDigitalPct = currTotal > 0 ? (currDigital / currTotal) * 100 : 0;
-  const prevDigitalPct = prevSnap.total_cnt > 0 ? ((prevSnap.digital_cnt ?? 0) / prevSnap.total_cnt) * 100 : 0;
 
   return {
     delta_total_cnt,
     delta_total_cnt_pct,
-    delta_digital_cnt: currDigital - (prevSnap.digital_cnt ?? 0),
-    delta_digital_pct_cnt_pp: currDigitalPct - prevDigitalPct,
+    delta_digital_cnt: currDigital - prevLive.digital_cnt,
+    delta_digital_pct_cnt_pp: currDigitalPct - prevLive.digital_pct_cnt,
     prev_snapshot: prevSnap,
   };
 }

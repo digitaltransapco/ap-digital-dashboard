@@ -106,10 +106,9 @@ export default async function DashboardPage() {
     );
   }
 
-  const [circleStats, divisionStats, delta] = await Promise.all([
+  const [circleStats, divisionStats] = await Promise.all([
     getCircleStats(snapshot.id),
     getDivisionStats(snapshot.id),
-    getDelta(snapshot),
   ]);
 
   if (!circleStats) {
@@ -120,6 +119,7 @@ export default async function DashboardPage() {
     );
   }
 
+  const delta = await getDelta(snapshot, circleStats);
   const officeData = await getOfficeInsightData(snapshot.id);
   const divisionInsightData: DivisionInsightData[] = divisionStats.map((d) => ({
     division_name: d.division_name,

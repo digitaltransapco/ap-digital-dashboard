@@ -7,6 +7,7 @@ import { CircleHeader } from '@/components/dashboard/CircleHeader';
 import { CircleKpiRow, CircleKpiRowSkeleton } from '@/components/dashboard/CircleKpiRow';
 import { CircleLeaderboard } from '@/components/dashboard/CircleLeaderboard';
 import { BICalloutStrip } from '@/components/dashboard/BICalloutStrip';
+import { ActionPlan } from '@/components/dashboard/ActionPlan';
 import { DivisionGrid } from '@/components/dashboard/DivisionGrid';
 import { OfficeSearch } from '@/components/dashboard/OfficeSearch';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -151,6 +152,10 @@ export default async function DashboardPage() {
         </Suspense>
 
         <BICalloutStrip callouts={callouts} />
+
+        <Suspense fallback={<Skeleton className="h-96 w-full rounded-xl" />}>
+          <ActionPlan snapshotId={snapshot.id} snapshotDate={snapshot.snapshot_date} />
+        </Suspense>
 
         <div>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">

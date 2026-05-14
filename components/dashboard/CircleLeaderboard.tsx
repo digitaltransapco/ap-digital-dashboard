@@ -23,7 +23,8 @@ export async function CircleLeaderboard({ snapshotId }: Props) {
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="text-base font-semibold">Top Transaction-Volume Offices Across Circle</CardTitle>
+        <CardTitle className="text-base font-semibold">Top Cash (Non-Digital) Transacting Offices</CardTitle>
+        <p className="text-xs text-[var(--fg-muted)] mt-0.5">Offices with the most cash transactions across AP Circle — convert these first.</p>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="HO">
@@ -46,6 +47,7 @@ export async function CircleLeaderboard({ snapshotId }: Props) {
                         <th scope="col" className="text-left py-2 font-medium">Office</th>
                         <th scope="col" className="text-left py-2 font-medium">Division</th>
                         <th scope="col" className="text-right py-2 font-medium pr-2">Total Txns</th>
+                        <th scope="col" className="text-right py-2 font-medium pr-2">Cash Txns</th>
                         <th scope="col" className="text-right py-2 font-medium">Digital %</th>
                       </tr>
                     </thead>
@@ -58,6 +60,7 @@ export async function CircleLeaderboard({ snapshotId }: Props) {
                             <td className="py-2 font-medium">{o.office_name}</td>
                             <td className="py-2 text-[var(--fg-muted)] text-xs">{o.division_name.replace(' Division', '')}</td>
                             <td className="py-2 text-right font-mono tabular-nums pr-2">{formatCount(o.total_cnt)}</td>
+                            <td className="py-2 text-right font-mono tabular-nums pr-2 text-rose-700">{formatCount(o.manual_cnt)}</td>
                             <td className="py-2 text-right">
                               <Badge className={`${color.bg} ${color.text} border-0 font-mono`}>
                                 {o.digital_pct_cnt != null ? formatPct(o.digital_pct_cnt) : '–'}

@@ -118,12 +118,12 @@ export async function getTopOfficesCircle(
   const supabase = createServiceClient();
   const typeCode = TYPE_CODE_MAP[officeTypeLabel] ?? officeTypeLabel;
 
-  // 1. Get top office IDs by total_cnt for this snapshot
+  // 1. Get top office IDs by manual_cnt for this snapshot (cash leaders)
   const { data: topTxns } = await supabase
     .from('office_transactions')
     .select('office_id, digital_cnt, digital_pct_cnt, total_cnt, total_amt, manual_cnt')
     .eq('snapshot_id', snapshotId)
-    .order('total_cnt', { ascending: false })
+    .order('manual_cnt', { ascending: false })
     .limit(500); // fetch top 500 then filter by type
 
   if (!topTxns || topTxns.length === 0) return [];

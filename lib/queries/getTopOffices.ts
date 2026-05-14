@@ -1,4 +1,5 @@
 import { createServiceClient } from '@/lib/supabase/server';
+import { TAB_TO_TYPE_CODE } from '@/lib/utils/constants';
 
 export type RankingView = 'push' | 'champions' | 'volume';
 
@@ -32,7 +33,9 @@ interface MasterRow {
   office_type_code: string;
 }
 
-const TYPE_CODE_MAP: Record<string, string> = { HO: 'HPO', SO: 'SPO', BO: 'BPO', BPC: 'BPC' };
+function resolveTypeCodes(tab: string): string[] {
+  return TAB_TO_TYPE_CODE[tab] ?? [tab];
+}
 
 export async function getTopOfficesForDivision(
   snapshotId: string,
@@ -41,15 +44,21 @@ export async function getTopOfficesForDivision(
   view: RankingView = 'push',
 ): Promise<TopOffice[]> {
   const supabase = createServiceClient();
-  const typeCode = TYPE_CODE_MAP[officeTypeLabel] ?? officeTypeLabel;
+  const typeCodes = resolveTypeCodes(officeTypeLabel);
 
-  // 1. Get office IDs for this division + type from master
-  const { data: masterRows } = await supabase
+  // 1. Get office IDs for this division + type(s) from master
+  let q = supabase
     .from('offices_master')
     .select('office_id, office_name, division_name, office_type_code')
-    .eq('division_name', divisionName)
-    .eq('office_type_code', typeCode);
+    .eq('division_name', divisionName);
 
+  if (typeCodes.length === 1) {
+    q = q.eq('office_type_code', typeCodes[0]);
+  } else {
+    q = q.in('office_type_code', typeCodes);
+  }
+
+  const { data: masterRows } = await q;
   if (!masterRows || masterRows.length === 0) return [];
   const masterMap = new Map((masterRows as MasterRow[]).map((r) => [r.office_id, r]));
   const divOfficeIds = Array.from(masterMap.keys());
@@ -98,8 +107,6 @@ export async function getTopOfficesForDivision(
     return offices.sort((a, b) => b.manual_cnt - a.manual_cnt || b.total_cnt - a.total_cnt).slice(0, 5);
   }
   if (view === 'champions') {
-    // Minimum volume = median of peer group, with hard floor of 50.
-    // Prevents tiny offices with accidental 100% digital from dominating.
     const sorted = [...offices].map((o) => o.total_cnt).sort((a, b) => a - b);
     const median = sorted.length > 0 ? sorted[Math.floor(sorted.length / 2)] : 0;
     const threshold = Math.max(50, median);
@@ -116,7 +123,7 @@ export async function getTopOfficesCircle(
   officeTypeLabel: string,
 ): Promise<TopOffice[]> {
   const supabase = createServiceClient();
-  const typeCode = TYPE_CODE_MAP[officeTypeLabel] ?? officeTypeLabel;
+  const typeCodes = resolveTypeCodes(officeTypeLabel);
 
   // 1. Get top office IDs by manual_cnt for this snapshot (cash leaders)
   const { data: topTxns } = await supabase
@@ -131,24 +138,29 @@ export async function getTopOfficesCircle(
   const txnList = topTxns as TxnRow[];
   const officeIds = txnList.map((r) => r.office_id);
 
-  // 2. Look up master for those IDs, filter by type
+  // 2. Look up master for those IDs, filter by type(s)
   const masterMap = new Map<number, MasterRow>();
   const BATCH = 500;
   for (let i = 0; i < officeIds.length; i += BATCH) {
-    const { data } = await supabase
+    let q = supabase
       .from('offices_master')
       .select('office_id, office_name, division_name, office_type_code')
-      .in('office_id', officeIds.slice(i, i + BATCH))
-      .eq('office_type_code', typeCode);
+      .in('office_id', officeIds.slice(i, i + BATCH));
+    if (typeCodes.length === 1) {
+      q = q.eq('office_type_code', typeCodes[0]);
+    } else {
+      q = q.in('office_type_code', typeCodes);
+    }
+    const { data } = await q;
     for (const r of (data ?? []) as MasterRow[]) {
       masterMap.set(r.office_id, r);
     }
   }
 
-  // 3. Build result — only offices in master with correct type
+  // 3. Build result — only offices in master with correct type(s)
   return txnList
     .filter((t) => masterMap.has(t.office_id))
-    .slice(0, 5)
+    .slice(0, 10)
     .map((t) => {
       const m = masterMap.get(t.office_id)!;
       return {

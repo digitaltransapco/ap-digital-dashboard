@@ -1,5 +1,5 @@
 import { createServiceClient } from '@/lib/supabase/server';
-import { AP_CIRCLE_DIVISIONS } from '@/lib/utils/constants';
+import { TERRITORIAL_DIVISIONS } from '@/lib/utils/constants';
 
 export interface ActionPlanOffice {
   rank: number;
@@ -27,7 +27,7 @@ export interface ActionPlan {
 }
 
 const VALID_TYPE_CODES = new Set(['HPO', 'SPO', 'BPO', 'BPC']);
-const DIVISION_SET = new Set<string>(AP_CIRCLE_DIVISIONS);
+const DIVISION_SET = new Set<string>(TERRITORIAL_DIVISIONS);
 
 export async function getActionPlan(
   snapshotId: string,

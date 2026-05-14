@@ -1,5 +1,5 @@
 import { createServiceClient } from '@/lib/supabase/server';
-import { AP_CIRCLE_DIVISIONS } from '@/lib/utils/constants';
+import { ALL_DIVISIONS } from '@/lib/utils/constants';
 
 export interface DivisionStats {
   division_name: string;
@@ -60,7 +60,7 @@ export async function getDivisionStats(snapshotId: string): Promise<DivisionStat
 
   // 3. Aggregate in application code
   const divMap = new Map<string, { total_cnt: number; total_amt: number; digital_cnt: number; digital_amt: number; office_count: number }>();
-  for (const div of AP_CIRCLE_DIVISIONS) {
+  for (const div of ALL_DIVISIONS) {
     divMap.set(div, { total_cnt: 0, total_amt: 0, digital_cnt: 0, digital_amt: 0, office_count: 0 });
   }
 

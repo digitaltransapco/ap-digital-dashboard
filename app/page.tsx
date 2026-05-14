@@ -14,6 +14,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { generateInsights } from '@/lib/insights/generate';
 import type { OfficeInsightData, DivisionInsightData } from '@/lib/insights/generate';
 import { createServiceClient } from '@/lib/supabase/server';
+import { isRmsDivision } from '@/lib/utils/constants';
 import Link from 'next/link';
 import { Upload } from 'lucide-react';
 
@@ -121,10 +122,13 @@ export default async function DashboardPage() {
 
   const delta = await getDelta(snapshot, circleStats);
 
-  const territorialTotal = divisionStats.reduce((s, d) => s + d.total_cnt, 0);
-  const nonTerritorialTxns = circleStats.total_cnt - territorialTotal;
-  const territorialOffices = divisionStats.reduce((s, d) => s + d.office_count, 0);
-  const nonTerritorialOffices = circleStats.office_count - territorialOffices;
+  // Compute gap between circle total and all mapped divisions (territorial + RMS)
+  const mappedTotal    = divisionStats.reduce((s, d) => s + d.total_cnt, 0);
+  const nonMappedTxns  = circleStats.total_cnt - mappedTotal;
+  const mappedOffices  = divisionStats.reduce((s, d) => s + d.office_count, 0);
+  const nonMappedOffices = circleStats.office_count - mappedOffices;
+
+  const territorialDivCount = divisionStats.filter((d) => !isRmsDivision(d.division_name)).length;
 
   const officeData = await getOfficeInsightData(snapshot.id);
   const divisionInsightData: DivisionInsightData[] = divisionStats.map((d) => ({
@@ -153,12 +157,11 @@ export default async function DashboardPage() {
           <CircleKpiRow stats={circleStats} delta={delta} />
         </Suspense>
 
-        {nonTerritorialTxns > 0 && (
+        {nonMappedTxns > 0 && (
           <p className="text-xs text-[var(--fg-muted)] bg-[var(--card)] border border-[var(--border)] rounded-lg px-4 py-2.5">
-            Circle total includes <strong>{nonTerritorialTxns.toLocaleString('en-IN')}</strong> transactions
-            from <strong>{nonTerritorialOffices}</strong> offices (RMS divisions, Speedpost Centres, Foreign Post Offices and other
-            admin units) that are not part of the 29 territorial division blocks below.
-            Per-division percentages are computed only over the territorial offices.
+            Circle total includes <strong>{nonMappedTxns.toLocaleString('en-IN')}</strong> transactions
+            from <strong>{nonMappedOffices}</strong> {nonMappedOffices === 1 ? 'office' : 'offices'} not yet
+            mapped to any division in the master directory. Contact the O/o CPMG to update the hierarchy file.
           </p>
         )}
 
@@ -176,7 +179,7 @@ export default async function DashboardPage() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
             <div>
               <h2 className="text-lg font-bold text-[var(--fg)]">Division Breakdown</h2>
-              <span className="text-xs text-[var(--fg-muted)]">{divisionStats.length} divisions · top 5 offices per view</span>
+              <span className="text-xs text-[var(--fg-muted)]">{territorialDivCount} territorial divisions · top 5 offices per view</span>
             </div>
             <OfficeSearch />
           </div>

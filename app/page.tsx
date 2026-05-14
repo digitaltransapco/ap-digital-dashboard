@@ -155,7 +155,7 @@ export default async function DashboardPage() {
         </div>
 
         <Suspense fallback={<CircleKpiRowSkeleton />}>
-          <CircleKpiRow stats={circleStats} delta={delta} />
+          <CircleKpiRow stats={circleStats} delta={delta} snapshotId={snapshot.id} />
         </Suspense>
 
         {nonMappedTxns > 0 && (

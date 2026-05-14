@@ -4,10 +4,12 @@ import { formatCount, formatPct, formatDelta } from '@/lib/utils/format';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { FileSpreadsheet } from 'lucide-react';
 
 interface Props {
   stats: CircleStats;
   delta: SnapshotDelta | null;
+  snapshotId: string;
 }
 
 interface KpiCardProps {
@@ -55,7 +57,7 @@ export function CircleKpiRowSkeleton() {
   );
 }
 
-export function CircleKpiRow({ stats, delta }: Props) {
+export function CircleKpiRow({ stats, delta, snapshotId }: Props) {
   const deltaTotalCntPct = delta?.delta_total_cnt_pct ?? null;
   const deltaDigitalPp = delta?.delta_digital_pct_cnt_pp ?? null;
 
@@ -88,12 +90,17 @@ export function CircleKpiRow({ stats, delta }: Props) {
         info="Total transactions divided across 29 AP Circle territorial divisions."
         delta={null}
       />
-      <KpiCard
-        label="Total Headroom"
-        value={formatCount(stats.digital_headroom)}
-        info="Estimated additional digital transactions if every below-average office matched the circle's current digital %. Sum across all laggard offices."
-        delta={null}
-      />
+      <Card className="p-4 flex flex-col gap-2">
+        <p className="text-xs font-medium text-[var(--fg-muted)] uppercase tracking-wide leading-tight">Export</p>
+        <p className="text-sm font-medium text-[var(--fg)] leading-snug">Division-wise<br />Digital Report</p>
+        <a
+          href={`/api/export/division-report?snapshotId=${snapshotId}`}
+          className="mt-auto inline-flex items-center justify-center gap-1.5 bg-[var(--accent)] text-white text-xs font-semibold px-3 py-2 rounded-lg hover:opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-1"
+        >
+          <FileSpreadsheet className="w-3.5 h-3.5" />
+          Download Excel
+        </a>
+      </Card>
     </div>
   );
 }

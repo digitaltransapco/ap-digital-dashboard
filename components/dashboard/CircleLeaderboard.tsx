@@ -1,11 +1,12 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { getTopOfficesCircle } from '@/lib/queries/getTopOffices';
 import type { TopOffice } from '@/lib/queries/getTopOffices';
 import { TAB_ORDER } from '@/lib/utils/constants';
 import { formatCount, formatPct } from '@/lib/utils/format';
 import { digitalPctColor } from '@/lib/utils/colors';
+import { CircleLeaderboardShell } from './CircleLeaderboardShell';
 
 interface Props {
   snapshotId: string;
@@ -113,12 +114,8 @@ export async function CircleLeaderboard({ snapshotId }: Props) {
   const tabData = Object.fromEntries(TAB_ORDER.map((tab, i) => [tab, results[i]]));
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base font-semibold">Top Cash (Non-Digital) Transacting Offices</CardTitle>
-        <p className="text-xs text-[var(--fg-muted)] mt-0.5">Offices with the most cash transactions across AP Circle — convert these first.</p>
-      </CardHeader>
-      <CardContent>
+    <Card className="overflow-hidden">
+      <CircleLeaderboardShell>
         <Tabs defaultValue="HO">
           <TabsList className="mb-4">
             {TAB_ORDER.map((tab) => (
@@ -137,7 +134,7 @@ export async function CircleLeaderboard({ snapshotId }: Props) {
             );
           })}
         </Tabs>
-      </CardContent>
+      </CircleLeaderboardShell>
     </Card>
   );
 }

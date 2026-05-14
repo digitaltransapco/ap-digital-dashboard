@@ -1,11 +1,12 @@
 import { getActionPlan } from '@/lib/queries/getActionPlan';
 import type { ActionPlan as ActionPlanData, ActionPlanOffice } from '@/lib/queries/getActionPlan';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { formatCount, formatPct } from '@/lib/utils/format';
 import { digitalPctColor } from '@/lib/utils/colors';
 import { ActionPlanCopyButton } from './ActionPlanCopyButton';
+import { ActionPlanShell } from './ActionPlanShell';
 
 interface Props {
   snapshotId: string;
@@ -140,14 +141,8 @@ export async function ActionPlan({ snapshotId, snapshotDate }: Props) {
   ]);
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base font-semibold">Action Plan — Where to push next</CardTitle>
-        <p className="text-xs text-[var(--fg-muted)] mt-0.5">
-          Offices to prioritise this week to lift Circle Digital %. Math assumes each targeted office moves to 80% digital adoption.
-        </p>
-      </CardHeader>
-      <CardContent>
+    <Card className="overflow-hidden">
+      <ActionPlanShell plan10OfficeCount={plan10.offices.length} plan5OfficeCount={plan5.offices.length}>
         <Tabs defaultValue="10pp">
           <TabsList className="mb-4">
             <TabsTrigger value="10pp">+10pp Goal</TabsTrigger>
@@ -160,7 +155,7 @@ export async function ActionPlan({ snapshotId, snapshotDate }: Props) {
             <PlanTab plan={plan5} snapshotDate={snapshotDate} />
           </TabsContent>
         </Tabs>
-      </CardContent>
+      </ActionPlanShell>
     </Card>
   );
 }

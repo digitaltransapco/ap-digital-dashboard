@@ -48,6 +48,7 @@ export async function CircleLeaderboard({ snapshotId }: Props) {
                         <th scope="col" className="text-left py-2 font-medium">Division</th>
                         <th scope="col" className="text-right py-2 font-medium pr-2">Total Txns</th>
                         <th scope="col" className="text-right py-2 font-medium pr-2">Cash Txns</th>
+                        <th scope="col" className="text-right py-2 font-medium pr-2">Digital Txns</th>
                         <th scope="col" className="text-right py-2 font-medium">Digital %</th>
                       </tr>
                     </thead>
@@ -61,6 +62,7 @@ export async function CircleLeaderboard({ snapshotId }: Props) {
                             <td className="py-2 text-[var(--fg-muted)] text-xs">{o.division_name.replace(' Division', '')}</td>
                             <td className="py-2 text-right font-mono tabular-nums pr-2">{formatCount(o.total_cnt)}</td>
                             <td className="py-2 text-right font-mono tabular-nums pr-2 text-rose-700">{formatCount(o.manual_cnt)}</td>
+                            <td className="py-2 text-right font-mono tabular-nums pr-2 text-emerald-700">{formatCount(o.digital_cnt)}</td>
                             <td className="py-2 text-right">
                               <Badge className={`${color.bg} ${color.text} border-0 font-mono`}>
                                 {o.digital_pct_cnt != null ? formatPct(o.digital_pct_cnt) : '–'}

@@ -23,7 +23,7 @@ export function TopOfficesTable({ offices, view }: Props) {
           <th scope="col" className="text-left py-1.5 font-medium w-4">#</th>
           <th scope="col" className="text-left py-1.5 font-medium">Office</th>
           {view === 'push' && <th scope="col" className="text-right py-1.5 font-medium">Total</th>}
-          {view === 'push' && <th scope="col" className="text-right py-1.5 font-medium">Manual</th>}
+          {view === 'push' && <th scope="col" className="text-right py-1.5 font-medium">Cash Txns</th>}
           {view === 'champions' && <th scope="col" className="text-right py-1.5 font-medium">Total</th>}
           {view === 'champions' && <th scope="col" className="text-left py-1.5 font-medium pl-2">Top Mode</th>}
           {view === 'volume' && <th scope="col" className="text-right py-1.5 font-medium">Total</th>}

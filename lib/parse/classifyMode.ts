@@ -1,16 +1,13 @@
-// IMPORTANT: these buckets match what is shown to Directorate. Do not change without sign-off.
+// Per Directorate guidance (May 2026): analysis universe is restricted
+// to Cash + 12 specific digital modes. All other modes are excluded
+// from totals entirely.
+
 export const MANUAL_MODES = [
   'Cash',
-  'On Postal Service',
-  'Postage Stamp',
-  'Service Stamp',
-  'Franking Machine',
-  'Contract',
 ] as const;
 
 export const DIGITAL_MODES = [
   'DQR Scan',
-  'Franchise Wallet',
   'SBIPOS-CARD',
   'SBIPOS BHARATQR',
   'SBIEPAY BHARATQR',
@@ -24,20 +21,23 @@ export const DIGITAL_MODES = [
   'IPPB',
 ] as const;
 
-export const OTHER_MODES = ['Other'] as const;
+// EXCLUDED from analysis entirely (not counted in totals):
+// Postage Stamp, Service Stamp, Franking Machine, On Postal Service,
+// Contract, Franchise Wallet, Other
+export const EXCLUDED_MODES = [
+  'Postage Stamp',
+  'Service Stamp',
+  'Franking Machine',
+  'On Postal Service',
+  'Contract',
+  'Franchise Wallet',
+  'Other',
+] as const;
 
-export type ManualMode = typeof MANUAL_MODES[number];
-export type DigitalMode = typeof DIGITAL_MODES[number];
-export type OtherMode = typeof OTHER_MODES[number];
-export type ModeType = 'manual' | 'digital' | 'other';
+export type ModeBucket = 'manual' | 'digital' | 'excluded';
 
-const MANUAL_SET = new Set<string>(MANUAL_MODES);
-const DIGITAL_SET = new Set<string>(DIGITAL_MODES);
-
-export function bucketOf(modeName: string): ModeType {
-  if (MANUAL_SET.has(modeName)) return 'manual';
-  if (DIGITAL_SET.has(modeName)) return 'digital';
-  return 'other';
+export function bucketOf(modeName: string): ModeBucket {
+  if ((MANUAL_MODES as readonly string[]).includes(modeName)) return 'manual';
+  if ((DIGITAL_MODES as readonly string[]).includes(modeName)) return 'digital';
+  return 'excluded';
 }
-
-export const ALL_MODES = [...MANUAL_MODES, ...DIGITAL_MODES, ...OTHER_MODES];

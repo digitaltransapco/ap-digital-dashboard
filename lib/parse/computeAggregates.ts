@@ -20,17 +20,17 @@ export function computeAggregates(officeRows: RawOfficeRow[]): OfficeAggregate[]
   return officeRows.map((row) => {
     let manual_cnt = 0, manual_amt = 0;
     let digital_cnt = 0, digital_amt = 0;
-    let other_cnt = 0, other_amt = 0;
+    const other_cnt = 0, other_amt = 0;
 
     for (const [mode, { cnt, amt }] of Object.entries(row.modes)) {
       const bucket = bucketOf(mode);
       if (bucket === 'manual') { manual_cnt += cnt; manual_amt += amt; }
       else if (bucket === 'digital') { digital_cnt += cnt; digital_amt += amt; }
-      else { other_cnt += cnt; other_amt += amt; }
+      // excluded modes: not counted in totals
     }
 
-    const total_cnt = row.total_cnt || manual_cnt + digital_cnt + other_cnt;
-    const total_amt = row.total_amt || manual_amt + digital_amt + other_amt;
+    const total_cnt = manual_cnt + digital_cnt;
+    const total_amt = manual_amt + digital_amt;
 
     return {
       office_id: row.office_id,

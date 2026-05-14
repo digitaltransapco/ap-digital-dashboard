@@ -30,6 +30,7 @@ interface PrevSnapshot {
 export default function UploadPage() {
   const router = useRouter();
   const [parsed, setParsed] = useState<ParsedState | null>(null);
+  const [csvFile, setCsvFile] = useState<File | null>(null);
   const [snapshotDate, setSnapshotDate] = useState(new Date().toISOString().slice(0, 10));
   const [periodStart, setPeriodStart] = useState(new Date().toISOString().slice(0, 8) + '01');
   const [pin, setPin] = useState('');
@@ -38,6 +39,7 @@ export default function UploadPage() {
   const [snapshotExists, setSnapshotExists] = useState(false);
 
   const handleFile = useCallback(async (file: File) => {
+    setCsvFile(file);
     const text = await file.text();
     const { officeRows, summaryRow, errors } = parseBookingCsv(text);
 
@@ -70,23 +72,19 @@ export default function UploadPage() {
   }, [snapshotDate]);
 
   const handleUpload = async () => {
-    if (!parsed) return;
+    if (!parsed || !csvFile) return;
     setLoading(true);
 
-    const payload = {
-      snapshot_date: snapshotDate,
-      period_start: periodStart,
-      period_end: snapshotDate,
-      source_filename: parsed.filename,
-      offices: parsed.aggregates,
-      pin: pin || undefined,
-    };
+    const fd = new FormData();
+    fd.append('file', csvFile);
+    fd.append('snapshot_date', snapshotDate);
+    fd.append('period_start', periodStart);
+    if (pin) fd.append('pin', pin);
 
     try {
       const res = await fetch('/api/upload', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: fd,
       });
       const json = await res.json();
       if (!res.ok) {

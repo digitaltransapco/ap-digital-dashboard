@@ -1,55 +1,53 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
-import { z } from 'zod';
+export const maxDuration = 60;
+
 import { createServiceClient } from '@/lib/supabase/server';
+import { parseBookingCsv } from '@/lib/parse/parseBookingCsv';
+import { computeAggregates } from '@/lib/parse/computeAggregates';
 import type { UploadSnapshot } from '@/lib/supabase/types';
 
-const OfficeRowSchema = z.object({
-  office_id: z.number(),
-  manual_cnt: z.number(),
-  manual_amt: z.number(),
-  digital_cnt: z.number(),
-  digital_amt: z.number(),
-  other_cnt: z.number(),
-  other_amt: z.number(),
-  total_cnt: z.number(),
-  total_amt: z.number(),
-  digital_pct_cnt: z.number().nullable(),
-  digital_pct_amt: z.number().nullable(),
-  modes: z.record(z.string(), z.object({ cnt: z.number(), amt: z.number() })),
-});
-
-const UploadPayloadSchema = z.object({
-  snapshot_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  period_start: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  period_end: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  source_filename: z.string(),
-  offices: z.array(OfficeRowSchema),
-  pin: z.string().optional(),
-});
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 export async function POST(req: NextRequest) {
-  const body = await req.json().catch(() => null);
-  if (!body) return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+  let formData: FormData;
+  try {
+    formData = await req.formData();
+  } catch {
+    return NextResponse.json({ error: 'Expected multipart/form-data' }, { status: 400 });
+  }
 
-  const parsed = UploadPayloadSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: 'Validation failed', details: parsed.error.flatten() }, { status: 422 });
+  const fileEntry = formData.get('file');
+  const snapshot_date = formData.get('snapshot_date')?.toString() ?? '';
+  const period_start = formData.get('period_start')?.toString() ?? '';
+  const pin = formData.get('pin')?.toString() ?? '';
+
+  if (!(fileEntry instanceof File)) {
+    return NextResponse.json({ error: 'Missing file field' }, { status: 400 });
+  }
+  if (!DATE_RE.test(snapshot_date) || !DATE_RE.test(period_start)) {
+    return NextResponse.json({ error: 'Invalid or missing date fields' }, { status: 422 });
   }
 
   const uploadPin = process.env.UPLOAD_PIN;
-  if (uploadPin) {
-    const providedPin = parsed.data.pin ?? req.headers.get('x-upload-pin') ?? '';
-    if (providedPin !== uploadPin) {
-      return NextResponse.json({ error: 'Invalid PIN' }, { status: 401 });
-    }
+  if (uploadPin && pin !== uploadPin) {
+    return NextResponse.json({ error: 'Invalid PIN' }, { status: 401 });
   }
 
-  const { snapshot_date, period_start, period_end, source_filename, offices } = parsed.data;
+  const csvText = await fileEntry.text();
+  const { officeRows, errors } = parseBookingCsv(csvText);
+
+  if (errors.length > 0 && officeRows.length === 0) {
+    return NextResponse.json({ error: 'CSV parse failed: ' + errors[0] }, { status: 422 });
+  }
+
+  const offices = computeAggregates(officeRows);
+  const period_end = snapshot_date;
+  const source_filename = fileEntry.name;
+
   const supabase = createServiceClient();
 
-  // Check office ID matches in chunks to stay within PostgREST URL limits
   const officeIds = offices.map((o) => o.office_id);
   const masterIdSet = new Set<number>();
   const ID_CHUNK = 500;

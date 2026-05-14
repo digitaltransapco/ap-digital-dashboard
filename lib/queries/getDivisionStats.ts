@@ -37,6 +37,7 @@ export async function getDivisionStats(snapshotId: string): Promise<DivisionStat
       .from('office_transactions')
       .select('office_id, total_cnt, total_amt, digital_cnt, digital_amt')
       .eq('snapshot_id', snapshotId)
+      .order('id', { ascending: true })
       .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
     if (error || !data || data.length === 0) break;
     allTxns.push(...(data as TxnRow[]));

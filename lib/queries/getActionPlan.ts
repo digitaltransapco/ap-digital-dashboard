@@ -46,6 +46,7 @@ export async function getActionPlan(
       .select('office_id, total_cnt, digital_cnt, manual_cnt')
       .eq('snapshot_id', snapshotId)
       .gt('total_cnt', 0)
+      .order('id', { ascending: true })
       .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
     if (!data || data.length === 0) break;
     allTxns.push(...(data as { office_id: number; total_cnt: number; digital_cnt: number; manual_cnt: number }[]));

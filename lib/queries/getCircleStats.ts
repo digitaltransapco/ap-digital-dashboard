@@ -27,8 +27,10 @@ interface OfficeRow {
 export async function getCircleStats(snapshotId: string): Promise<CircleStats | null> {
   const supabase = createServiceClient();
 
-  // Fetch ALL rows for this snapshot — no master join. The circle headline
-  // must equal the source report's total (every transaction in the CSV counts).
+  // Fetch ALL rows for this snapshot — no master join, no type/division filter.
+  // The circle headline must equal the source report's total.
+  // ORDER BY id is required for deterministic offset pagination: without it,
+  // consecutive requests can return overlapping or skipped rows, corrupting the SUM.
   const allRows: OfficeRow[] = [];
   let page = 0;
   const PAGE_SIZE = 1000;
@@ -37,6 +39,7 @@ export async function getCircleStats(snapshotId: string): Promise<CircleStats | 
       .from('office_transactions')
       .select('total_cnt, total_amt, digital_cnt, digital_amt, manual_cnt, manual_amt, digital_pct_cnt')
       .eq('snapshot_id', snapshotId)
+      .order('id', { ascending: true })
       .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
 
     if (error || !data || data.length === 0) break;

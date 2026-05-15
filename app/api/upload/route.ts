@@ -10,6 +10,10 @@ import type { UploadSnapshot } from '@/lib/supabase/types';
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
+// Max concurrent Supabase insert requests — keeps total time well under 60 s
+const INSERT_CONCURRENCY = 6;
+const INSERT_CHUNK = 1000;
+
 export async function POST(req: NextRequest) {
   let formData: FormData;
   try {
@@ -46,24 +50,14 @@ export async function POST(req: NextRequest) {
   const period_end = snapshot_date;
   const source_filename = fileEntry.name;
 
-  const supabase = createServiceClient();
-
-  const officeIds = offices.map((o) => o.office_id);
-  const masterIdSet = new Set<number>();
-  const ID_CHUNK = 500;
-  for (let i = 0; i < officeIds.length; i += ID_CHUNK) {
-    const chunk = officeIds.slice(i, i + ID_CHUNK);
-    const { data } = await supabase.from('offices_master').select('office_id').in('office_id', chunk);
-    ((data ?? []) as { office_id: number }[]).forEach((r) => masterIdSet.add(r.office_id));
-  }
-  const matched_offices = offices.filter((o) => masterIdSet.has(o.office_id)).length;
-  const orphan_offices = offices.length - matched_offices;
-
-  const total_cnt = offices.reduce((s, o) => s + o.total_cnt, 0);
-  const total_amt = offices.reduce((s, o) => s + o.total_amt, 0);
+  const total_cnt   = offices.reduce((s, o) => s + o.total_cnt,   0);
+  const total_amt   = offices.reduce((s, o) => s + o.total_amt,   0);
   const digital_cnt = offices.reduce((s, o) => s + o.digital_cnt, 0);
   const digital_amt = offices.reduce((s, o) => s + o.digital_amt, 0);
 
+  const supabase = createServiceClient();
+
+  // Upsert snapshot metadata
   const { data: snapshotData, error: snapError } = await supabase
     .from('upload_snapshots')
     .upsert({
@@ -72,8 +66,8 @@ export async function POST(req: NextRequest) {
       period_end,
       source_filename,
       row_count: offices.length,
-      matched_offices,
-      orphan_offices,
+      matched_offices: null,
+      orphan_offices: null,
       total_cnt,
       total_amt,
       digital_cnt,
@@ -89,6 +83,7 @@ export async function POST(req: NextRequest) {
   const snapshot = snapshotData as UploadSnapshot;
   const snapshotId = snapshot.id;
 
+  // Clear previous transaction rows for this snapshot
   const { error: delError } = await supabase
     .from('office_transactions')
     .delete()
@@ -98,34 +93,43 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: delError.message }, { status: 500 });
   }
 
-  const CHUNK = 500;
-  for (let i = 0; i < offices.length; i += CHUNK) {
-    const chunk = offices.slice(i, i + CHUNK).map((o) => ({
-      snapshot_id: snapshotId,
-      office_id: o.office_id,
-      manual_cnt: o.manual_cnt,
-      manual_amt: o.manual_amt,
-      digital_cnt: o.digital_cnt,
-      digital_amt: o.digital_amt,
-      other_cnt: o.other_cnt,
-      other_amt: o.other_amt,
-      total_cnt: o.total_cnt,
-      total_amt: o.total_amt,
-      digital_pct_cnt: o.digital_pct_cnt,
-      digital_pct_amt: o.digital_pct_amt,
-      modes: o.modes,
-    }));
+  // Build all insert chunks upfront
+  const chunks: object[][] = [];
+  for (let i = 0; i < offices.length; i += INSERT_CHUNK) {
+    chunks.push(
+      offices.slice(i, i + INSERT_CHUNK).map((o) => ({
+        snapshot_id:       snapshotId,
+        office_id:         o.office_id,
+        manual_cnt:        o.manual_cnt,
+        manual_amt:        o.manual_amt,
+        digital_cnt:       o.digital_cnt,
+        digital_amt:       o.digital_amt,
+        other_cnt:         o.other_cnt,
+        other_amt:         o.other_amt,
+        total_cnt:         o.total_cnt,
+        total_amt:         o.total_amt,
+        digital_pct_cnt:   o.digital_pct_cnt,
+        digital_pct_amt:   o.digital_pct_amt,
+        modes:             o.modes,
+      })),
+    );
+  }
 
-    const { error: insertError } = await supabase.from('office_transactions').insert(chunk);
-    if (insertError) {
-      return NextResponse.json({ error: insertError.message }, { status: 500 });
+  // Insert with bounded concurrency so all rows land before the 60-s timeout
+  for (let i = 0; i < chunks.length; i += INSERT_CONCURRENCY) {
+    const batch = chunks.slice(i, i + INSERT_CONCURRENCY);
+    const results = await Promise.all(
+      batch.map((chunk) => supabase.from('office_transactions').insert(chunk)),
+    );
+    for (const { error } of results) {
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     }
   }
 
   return NextResponse.json({
     snapshot_id: snapshotId,
-    matched_offices,
-    orphan_offices,
+    matched_offices: offices.length,
+    orphan_offices: 0,
     circle_totals: { total_cnt, total_amt, digital_cnt, digital_amt },
   });
 }

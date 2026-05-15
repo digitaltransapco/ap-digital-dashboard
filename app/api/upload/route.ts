@@ -126,6 +126,23 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // Verify every row was saved — if the count is short, the insert was cut off
+  // mid-way (e.g. timeout). Return an error so the user knows to re-upload
+  // rather than silently showing partial data on the dashboard.
+  const { count: savedCount, error: countError } = await supabase
+    .from('office_transactions')
+    .select('*', { count: 'exact', head: true })
+    .eq('snapshot_id', snapshotId);
+
+  if (countError || savedCount !== offices.length) {
+    return NextResponse.json(
+      {
+        error: `Upload incomplete: ${savedCount ?? 0} of ${offices.length} offices saved. Please upload the file again.`,
+      },
+      { status: 500 },
+    );
+  }
+
   return NextResponse.json({
     snapshot_id: snapshotId,
     matched_offices: offices.length,

@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { FileDropzone } from '@/components/upload/FileDropzone';
 import { ValidationPreview } from '@/components/upload/ValidationPreview';
@@ -28,7 +27,6 @@ interface PrevSnapshot {
 }
 
 export default function UploadPage() {
-  const router = useRouter();
   const [parsed, setParsed] = useState<ParsedState | null>(null);
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [snapshotDate, setSnapshotDate] = useState(new Date().toISOString().slice(0, 10));
@@ -92,7 +90,7 @@ export default function UploadPage() {
         return;
       }
       toast.success(`Uploaded ${formatCount(json.circle_totals.total_cnt)} transactions · ${json.matched_offices} offices matched`);
-      setTimeout(() => router.push('/'), 1200);
+      setTimeout(() => { window.location.href = '/'; }, 1200);
     } catch {
       toast.error('Network error');
     } finally {

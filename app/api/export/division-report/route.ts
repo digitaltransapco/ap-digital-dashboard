@@ -258,6 +258,13 @@ export async function GET(req: NextRequest) {
     if (colNum === 2) cell.alignment = { horizontal: 'left' };
   });
 
+  // Force-apply % format to every cell in column N — eachCell skips cells whose value is 0
+  for (let rowNum = DATA_START; rowNum <= TOTAL_ROW; rowNum++) {
+    const cell = ws.getCell(rowNum, 14);
+    cell.numFmt = '0.00"%"';
+    cell.alignment = { horizontal: 'right' };
+  }
+
   // Conditional formatting on % Digital column (col N = 14)
   // Priority determines precedence: lower number = higher priority (wins over others)
   // Conditional formatting precedence: lower priority number wins when multiple rules match.
